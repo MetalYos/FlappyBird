@@ -4,6 +4,7 @@ import pygame
 class ScrollingBackground():
     def __init__(self, img_tile_path, y, num_tiles, scroll_speed, screen_width, direction='right'):
         self.tile_image = pygame.image.load(img_tile_path)
+        self.tile_image.convert_alpha()
         self.direction = direction
 
         self.init_x = -self.tile_image.get_width()
@@ -31,4 +32,4 @@ class ScrollingBackground():
     def render(self, render_screen):
         for i in range(self.num_tiles):
             pos_x = self.pos_x + i * self.tile_image.get_width()
-            render_screen.blit(self.tile_image, (pos_x, 0))
+            render_screen.blit(self.tile_image, (pos_x, self.y))
