@@ -67,14 +67,20 @@ def play_music(index, music_list):
     pygame.mixer.music.play(-1)
 
 
-def draw_text(render_screen, font, color, antialias, text, position, align='center'):
+def draw_text(render_screen, text, font, color, antialias, align_rect, h_aligh='center', v_aligh='center'):
     text_render = font.render(text, antialias, color)
-    pos = (position[0] - text_render.get_width() // 2,
-           position[1] - text_render.get_height() // 2)
-    if align is 'left':
-        pos = (position[0], position[1] - text_render.get_height() // 2)
-    if align is 'right':
-        pos = (position[0] - text_render.get_width(),
-               position[1] - text_render.get_height() // 2)
+    # Horizontal align (default = center)
+    pos_x = align_rect.x + align_rect.width // 2 - text_render.get_width() // 2
+    if h_aligh is 'left':
+        pos_x = align_rect.x
+    if h_aligh is 'right':
+        pos_x = align_rect.x + align_rect.width - text_render.get_width()
 
-    render_screen.blit(text_render, pos)
+    # Vertical align (default = center)
+    pos_y = align_rect.y + align_rect.height // 2 - text_render.get_height() // 2
+    if v_aligh == 'top':
+        pos_y = align_rect.y
+    if v_aligh is 'bottom':
+        pos_y = align_rect.y + align_rect.height - text_render.get_height()
+
+    render_screen.blit(text_render, (pos_x, pos_y))
