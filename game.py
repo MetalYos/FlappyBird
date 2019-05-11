@@ -1,15 +1,18 @@
 import pygame
 import random
 from statemachine import StateMachine
-from constants import *
+from settings import Settings
 
 
 class Game():
     def __init__(self):
         pygame.init()
         random.seed()
+
+        Settings.instance().load('settings.txt')
+
         self.render_screen = pygame.display.set_mode(
-            (WINDOW_WIDTH, WINDOW_HEIGHT))
+            (Settings.instance().settings['window_width'], Settings.instance().settings['window_height']))
         pygame.display.set_caption("Flappy Bird")
 
         self.clock = pygame.time.Clock()
@@ -49,7 +52,7 @@ class Game():
         StateMachine.instance().render(self.render_screen)
 
         pygame.display.flip()
-        self.dt = self.clock.tick(FPS) / 1000
+        self.dt = self.clock.tick(Settings.instance().settings['fps']) / 1000
 
     def quit(self):
         pass

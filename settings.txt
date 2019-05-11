@@ -1,0 +1,23 @@
+# Settings File
+window_width = 1280
+window_height = 720
+
+fps = 60
+
+# Background settings
+far_scroll_speed = 50
+close_scroll_speed = 150
+ground_height = 113
+
+# Bird settings
+gravity = 50
+jump_force = 10
+fall_rot_threshold = 15
+rot_speed = 200
+
+# Pipe settings
+pipe_gap_min = $window_height, //, 5
+pipe_gap_max = $window_height, //, 3
+pipe_horizontal_gap = $window_width, //, 4
+# pipe_min_height = $ground_height, +, $pipe_gap_min, //, 2
+# pipe_max_height = $window_height, -, $pipe_gap_max, -, $pipe_min_height
