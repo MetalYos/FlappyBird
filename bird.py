@@ -1,6 +1,6 @@
 import pygame
 import os
-from constants import GRAVITY, JUMP_FORCE, JUMP_ROT_ANGLE, FALL_ROT_THRESHOLD, ROT_SPEED
+from constants import *
 from helpers import draw_rotated_image
 
 
@@ -13,21 +13,21 @@ class Bird():
         self.y = center_y - self.height // 2
         self.dy = 0
         self.d_angle = 0
-        self.rot_angle = 0
+        self.rot_rect = self.img.get_rect(topleft=(self.x, self.y))
 
         self.score = 0
 
     def left(self):
-        return self.x
+        return self.rot_rect.left
 
     def right(self):
-        return self.x + self.width
+        return self.rot_rect.right
 
     def top(self):
-        return self.y
+        return self.rot_rect.top
 
     def bottom(self):
-        return self.y + self.height
+        return self.rot_rect.bottom
 
     def update(self, dt):
         self.dy += GRAVITY * dt
@@ -41,7 +41,24 @@ class Bird():
         self.dy = -JUMP_FORCE
         self.d_angle = JUMP_ROT_ANGLE
 
+    def collides(self, pipe_pair):
+        if self.left() > pipe_pair.right():
+            return False
+
+        if self.right() < pipe_pair.left():
+            return False
+
+        if self.top() + PIPE_HIT_TOP_TOLERANCE <= pipe_pair.top_pipe_bottom():
+            if self.right() - self.rot_rect.width // 2 >= pipe_pair.left():
+                print('First Coll')
+                return True
+
+        if self.bottom() - PIPE_HIT_BOTTOM_TOLERANCE >= pipe_pair.bottom_pipe_top():
+            if self.right() - self.rot_rect.width // 2 >= pipe_pair.left():
+                return True
+
+        return False
+
     def render(self, render_screen):
-        #render_screen.blit(self.img, (self.x, self.y))
-        draw_rotated_image(render_screen, self.img, (self.x, self.y),
-                           (self.width // 2, self.height // 2), self.d_angle)
+        self.rot_rect = self.rotated_image = draw_rotated_image(render_screen, self.img, (self.x, self.y),
+                                                                (self.width // 2, self.height // 2), self.d_angle)

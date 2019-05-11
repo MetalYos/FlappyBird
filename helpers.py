@@ -111,3 +111,5 @@ def draw_rotated_image(surf, image, pos, originPos, angle):
 
     # rotate and blit the image
     surf.blit(rotated_image, origin)
+
+    return rotated_image.get_rect(topleft=origin)
