@@ -8,12 +8,15 @@ from settings import Settings
 from scrolling_background import ScrollingBackground
 from bird import Bird
 from pipe_pair import PipePair
+from button import Button
+from end_game_menu import EndGameMenu
 
 
 class PlayState(BaseState):
     def __init__(self):
         super().__init__()
-        self.start = False
+        self.play = False
+        self.lose = False
         self.pipe_pairs = []
         self.next_pipe_index = 0
 
@@ -41,6 +44,8 @@ class PlayState(BaseState):
         load_font(os.path.join('fonts', 'super_retro.ttf'),
                   'retro_40', self.cached_fonts, 40)
         load_font(os.path.join('fonts', 'super_retro.ttf'),
+                  'retro_20', self.cached_fonts, 20)
+        load_font(os.path.join('fonts', 'super_retro.ttf'),
                   'retro_10', self.cached_fonts, 10)
 
         # Load background images
@@ -53,6 +58,11 @@ class PlayState(BaseState):
             self.close_scroll_speed, self.window_width)
         self.background_bottom.y = self.window_height - \
             self.background_bottom.tile_image.get_height()
+
+        # Load score menu
+        self.end_game_menu = EndGameMenu(
+            self.window_width // 2, self.window_height // 3, self.cached_fonts)
+        self.end_game_menu.set_on_restart_callback(self.new_game)
 
         # Load bird
         self.bird = Bird(self.window_width // 2, self.window_height // 2)
@@ -67,13 +77,19 @@ class PlayState(BaseState):
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     statemachine.StateMachine.instance().exit()
+                if event.key == pygame.K_SPACE:
+                    if not self.play and not self.lose:
+                        self.play = True
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if pygame.mouse.get_pressed()[0] and self.lose:
+                    self.end_game_menu.on_mouse_click(event.pos)
 
     def update(self, dt):
         # Update scrolling background
         self.background_top.update(dt)
         self.background_bottom.update(dt)
 
-        if self.start:
+        if self.play:
             # Update bird (gravity)
             self.bird.update(dt)
 
@@ -83,19 +99,19 @@ class PlayState(BaseState):
 
             # Check collision with pipes
             if self.pipe_pairs[self.next_pipe_index].collides(self.bird):
-                self.start = False
-                self.new_game()
+                self.play = False
+                self.lose = True
                 return
 
             # Check collision with ground
             if self.bird.bottom() >= Settings.instance().settings['window_height'] - Settings.instance().settings['ground_height']:
-                self.start = False
-                self.new_game()
+                self.play = False
+                self.lose = True
                 return
 
             # if bird passed the pair of pipes, add a point
             if self.bird.left() >= self.pipe_pairs[self.next_pipe_index].right():
-                self.bird.score += 1
+                self.bird.increase_score()
                 self.next_pipe_index += 1
 
             # Spawn pipe pair if needed
@@ -117,6 +133,7 @@ class PlayState(BaseState):
                 self.next_pipe_index -= 1
 
         self.on_keypress(dt)
+        self.on_mouse_move()
 
     def render(self, render_screen):
         # Draw scrolling top background
@@ -132,29 +149,29 @@ class PlayState(BaseState):
         # Draw scrolling bottom background
         self.background_bottom.render(render_screen)
 
-        # Draw score
-        if not self.start:
+        if not self.play and not self.lose:
+            # Draw welcome message
             draw_text(render_screen, 'Welcome to Flappy Yos!', self.cached_fonts['retro_70'], (255, 255, 255), True, pygame.Rect(
                 0, self.window_height // 9, self.window_width, self.window_height - self.window_height // 9), 'center', 'top')
             draw_text(render_screen, 'Press Spacebar to start playing', self.cached_fonts['retro_40'], (255, 255, 255), True, pygame.Rect(
                 0, self.window_height // 4, self.window_width, self.window_height - self.window_height // 4), 'center', 'top')
-        else:
+        if self.play:
+            # Draw score
             draw_text(render_screen, str(self.bird.score), self.cached_fonts['retro_70'], (255, 255, 255), True, pygame.Rect(
                 0, self.window_height // 8, self.window_width, self.window_height - self.window_height // 8), 'center', 'top')
-
-        mouse_pos = pygame.mouse.get_pos()
-        text_render = self.cached_fonts['retro_10'].render(
-            f'({mouse_pos[0]}, {mouse_pos[1]})', True, (255, 255, 255))
-        render_screen.blit(text_render, mouse_pos)
+        if self.lose:
+            self.end_game_menu.render(
+                render_screen, self.bird.score, self.bird.highest_score)
 
     def on_keypress(self, dt):
         pressed = pygame.key.get_pressed()
-        if pressed[pygame.K_SPACE]:
-            self.start = True
+        if pressed[pygame.K_SPACE] and self.play:
             self.bird.jump()
 
     def on_mouse_move(self):
-        pass
+        mouse_pos = pygame.mouse.get_pos()
+        if self.lose:
+            self.end_game_menu.on_mouse_move(mouse_pos)
 
     def new_game(self):
         self.bird.reset()
@@ -167,3 +184,6 @@ class PlayState(BaseState):
                              random.randint(self.pipe_gap_min, self.pipe_gap_max))
         self.pipe_pairs.append(pipe_pair)
         self.next_pipe_index = 0
+
+        self.play = False
+        self.lose = False

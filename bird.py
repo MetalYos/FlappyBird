@@ -22,6 +22,7 @@ class Bird():
         self.rot_rect = self.img.get_rect(topleft=(self.x, self.y))
         self.radius = 40
         self.score = 0
+        self.highest_score = 0
 
     def left(self):
         return self.rot_rect.left
@@ -34,6 +35,10 @@ class Bird():
 
     def bottom(self):
         return self.rot_rect.bottom
+
+    def increase_score(self):
+        self.score += 1
+        self.highest_score = max(self.highest_score, self.score)
 
     def update(self, dt):
         self.dy += Settings.instance().settings['gravity'] * dt
